@@ -3,9 +3,9 @@ FROM ghcr.io/ministryofjustice/analytical-platform-airflow-python-base:1.19.0@sh
 ARG MOJAP_IMAGE_VERSION="default"
 ENV MOJAP_IMAGE_VERSION=${MOJAP_IMAGE_VERSION}
 
-USER root                 
-                       
-COPY requirements.txt requirements.txt 
+USER root
+
+COPY requirements.txt requirements.txt
 COPY src/ .
 
 RUN <<EOF
