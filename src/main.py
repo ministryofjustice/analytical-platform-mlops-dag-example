@@ -1,4 +1,3 @@
-
 import logging
 import os
 from datetime import datetime
@@ -22,11 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 def call_llm_gateway(text):
     try:
-        response = requests.post(
-            LLM_GATEWAY_URL,
-            json={"text": text},
-            timeout=10
-        )
+        response = requests.post(LLM_GATEWAY_URL, json={"text": text}, timeout=10)
         response.raise_for_status()
         result = response.json()
         return result.get("transformed_text", text)
@@ -43,8 +38,13 @@ def log_timing(func):
         start_time = datetime.now()
         result = func(*args, **kwargs)
         end_time = datetime.now()
-        logging.info("Completed %s in %s seconds", func_name, (end_time - start_time).total_seconds())
+        logging.info(
+            "Completed %s in %s seconds",
+            func_name,
+            (end_time - start_time).total_seconds(),
+        )
         return result
+
     return wrapper
 
 
