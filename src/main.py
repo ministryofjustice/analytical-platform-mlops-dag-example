@@ -6,6 +6,7 @@ from functools import wraps
 import boto3
 import pandas as pd
 import requests
+import openai
 
 s3_client = boto3.client("s3")
 
@@ -14,6 +15,7 @@ SOURCE_KEY = os.environ.get("S3_SOURCE_KEY")
 DESTINATION_BUCKET = os.environ.get("S3_DESTINATION_BUCKET")
 DESTINATION_KEY = os.environ.get("S3_DESTINATION_KEY")
 LLM_GATEWAY_URL = os.environ.get("SECRET_LLM_GATEWAY_URL")
+LLM_GATEWAY_API_KEY = os.environ.get("SECRET_LLM_GATEWAY_API_KEY")
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -21,10 +23,18 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 def call_llm_gateway(text):
     try:
-        response = requests.post(LLM_GATEWAY_URL, json={"text": text}, timeout=10)
-        response.raise_for_status()
-        result = response.json()
-        return result.get("transformed_text", text)
+        client = openai.OpenAI(
+            api_key=LLM_GATEWAY_API_KEY,
+            base_url=LLM_GATEWAY_URL
+        )
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": text}
+            ]
+        )
+        # Extract the response text
+        return response.choices[0].message.content
     except Exception as e:
         logging.error("LLM Gateway call failed: %s", e)
         return text
