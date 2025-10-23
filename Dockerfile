@@ -6,6 +6,8 @@ ENV MOJAP_IMAGE_VERSION=${MOJAP_IMAGE_VERSION}
 
 USER root
 
+WORKDIR /app
+
 COPY requirements.txt requirements.txt
 COPY src/ .
 
