@@ -33,22 +33,40 @@ def log_function(func):
     return wrapper
 
 
-def call_llm_gateway(text):
+def _normalized_llm_base_url():
+    """Return a normalized LLM gateway base URL with scheme, without trailing slash.
+
+    The Airflow logs show requests being made to a malformed URL (host duplicated,
+    missing scheme). We defensively add https:// if absent.
+    """
+    if not LLM_GATEWAY_URL:
+        raise ValueError("SECRET_LLM_URL environment variable not set")
+    url = LLM_GATEWAY_URL.strip()
+    if not (url.startswith("http://") or url.startswith("https://")):
+        url = "https://" + url.lstrip("/")
+    return url.rstrip("/")
+
+
+def call_llm_gateway(text: str) -> str:
+    """Call the LLM gateway with a single instruction line.
+
+    On failure, returns the original text so downstream logic can decide whether
+    to mark it as unchanged.
+    """
     try:
+        base_url = _normalized_llm_base_url()
         client = openai.OpenAI(
             api_key=LLM_GATEWAY_API_KEY,
-            base_url=LLM_GATEWAY_URL
+            base_url=base_url,
         )
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": text}
-            ]
+            messages=[{"role": "user", "content": text}],
+            timeout=30,
         )
-        # Extract the response text
         return response.choices[0].message.content
     except Exception as e:
-        logging.error("LLM Gateway call failed: %s", e)
+        logging.error("LLM Gateway call failed for text '%s': %s", text, e)
         return text
 
 
@@ -62,14 +80,24 @@ def read_csv_from_s3():
 
 
 @log_function
-def transform_data(df):
-    # Use a call to the gateway to examine each line in the input-data.csv file and correct any spelling mistakes.
+def transform_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Transform each row's text via the LLM.
+
+    Previous implementation only transformed the last row due to indentation bug.
+    This processes all rows sequentially. If a row is unchanged (LLM error), we keep
+    the original text and log a notice.
+    """
+    if "text" not in df.columns:
+        raise KeyError("Input DataFrame missing required 'text' column")
+
     for index, row in df.iterrows():
-        text = row["text"]
-    # Call LLM Gateway API to transform text
-    transformed_text = call_llm_gateway(text)
-    df.at[index, "text"] = transformed_text
-    logging.debug("Row %s transformed at %s", index, datetime.now().isoformat())
+        original = row["text"]
+        transformed = call_llm_gateway(original)
+        if transformed == original:
+            logging.warning("Row %s unchanged (LLM error or no modification)", index)
+        df.at[index, "text"] = transformed
+        logging.debug("Row %s transformed at %s", index, datetime.now().isoformat())
+
     return df
 
 
