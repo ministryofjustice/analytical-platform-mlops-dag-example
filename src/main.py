@@ -15,6 +15,7 @@ SOURCE_BUCKET = os.environ.get("S3_SOURCE_BUCKET")
 SOURCE_KEY = os.environ.get("S3_SOURCE_KEY")
 DESTINATION_BUCKET = os.environ.get("S3_DESTINATION_BUCKET")
 DESTINATION_KEY = os.environ.get("S3_DESTINATION_KEY")
+LLM_MODEL = os.environ.get("SECRET_LLM_MODEL")
 LLM_GATEWAY_URL = os.environ.get("SECRET_LLM_URL")
 LLM_GATEWAY_API_KEY = os.environ.get("SECRET_LLM_KEY")
 
@@ -50,7 +51,7 @@ def call_llm_gateway(text: str) -> str:
             base_url=base_url,
         )
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=LLM_MODEL,
             messages=[{"role": "user", "content": text}],
             timeout=30,
         )
