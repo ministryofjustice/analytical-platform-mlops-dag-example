@@ -20,7 +20,7 @@ LLM_GATEWAY_API_KEY = os.environ.get("SECRET_LLM_KEY")
 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s %(levelname)s %(message)s",
     stream=sys.stdout
 )
@@ -78,3 +78,7 @@ def write_csv_to_s3(df):
     s3 = boto3.client("s3")
     csv_buffer = df.to_csv(index=False)
     s3.put_object(Bucket=DESTINATION_BUCKET, Key=DESTINATION_KEY, Body=csv_buffer)
+
+
+print("Complete.")
+print(f"Completed at {datetime.now().isoformat()}")
