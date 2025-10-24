@@ -80,5 +80,8 @@ def write_csv_to_s3(df):
     s3.put_object(Bucket=DESTINATION_BUCKET, Key=DESTINATION_KEY, Body=csv_buffer)
 
 
-print("Complete.")
-print(f"Completed at {datetime.now().isoformat()}")
+if __name__ == "__main__":
+    df = read_csv_from_s3()
+    df = transform_data(df)
+    write_csv_to_s3(df)
+    print(f"Completed at {datetime.now().isoformat()}")
