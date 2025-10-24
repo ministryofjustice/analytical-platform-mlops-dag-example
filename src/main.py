@@ -34,11 +34,6 @@ def log_function(func):
 
 
 def _normalized_llm_base_url():
-    """Return a normalized LLM gateway base URL with scheme, without trailing slash.
-
-    The Airflow logs show requests being made to a malformed URL (host duplicated,
-    missing scheme). We defensively add https:// if absent.
-    """
     if not LLM_GATEWAY_URL:
         raise ValueError("SECRET_LLM_URL environment variable not set")
     url = LLM_GATEWAY_URL.strip()
@@ -48,11 +43,6 @@ def _normalized_llm_base_url():
 
 
 def call_llm_gateway(text: str) -> str:
-    """Call the LLM gateway with a single instruction line.
-
-    On failure, returns the original text so downstream logic can decide whether
-    to mark it as unchanged.
-    """
     try:
         base_url = _normalized_llm_base_url()
         client = openai.OpenAI(
@@ -81,12 +71,6 @@ def read_csv_from_s3():
 
 @log_function
 def transform_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Transform each row's text via the LLM.
-
-    Previous implementation only transformed the last row due to indentation bug.
-    This processes all rows sequentially. If a row is unchanged (LLM error), we keep
-    the original text and log a notice.
-    """
     if "text" not in df.columns:
         raise KeyError("Input DataFrame missing required 'text' column")
 
