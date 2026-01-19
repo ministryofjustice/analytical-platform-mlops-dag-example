@@ -1,5 +1,5 @@
 #checkov:skip=CKV_DOCKER_2: HEALTHCHECK not required
-FROM ghcr.io/ministryofjustice/analytical-platform-airflow-python-base:1.20.0@sha256:6cfccc9aca038a56a0400a8b382f989ed7ba6868f35e0d94fe564cee3f2e6cd5
+FROM ghcr.io/ministryofjustice/analytical-platform-airflow-python-base:1.24.0@sha256:cf7754468c74520ac27aa78309db52dccae3ac5ac88e05d7771e3b2a738ed895
 
 ARG MOJAP_IMAGE_VERSION="default"
 ENV MOJAP_IMAGE_VERSION=${MOJAP_IMAGE_VERSION}
